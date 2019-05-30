@@ -2,9 +2,6 @@
 
 let
   pkgs = import nixpkgs' { };
-  muslPkgs = import nixpkgs' {
-    localSystem.config = "x86_64-unknown-linux-musl";
-  };
 
 in rec {
   appimagetool = pkgs.callPackage ./appimagetool.nix {};
@@ -13,5 +10,5 @@ in rec {
     inherit appimagetool;
   };
 
-  appdir = pkgs.callPackage ./appdir.nix { inherit muslPkgs; };
+  appdir = pkgs.callPackage ./appdir.nix {};
 }
