@@ -72,22 +72,19 @@ static void update_map(char *mapping, char *map_file) {
     close(fd);
 }
 
-static void add_path(const char* name, const char* rootdir) {
-    char path_buf[PATH_MAX];
-    snprintf(path_buf, sizeof(path_buf), "/%s", name);
-
+static void add_path(const char* from, const char* to, const char* rootdir) {
     struct stat statbuf;
-    if (stat(path_buf, &statbuf) < 0) {
-        fprintf(stderr, "Cannot stat %s: %s\n", path_buf, strerror(errno));
+    if (stat(from, &statbuf) < 0) {
+        fprintf(stderr, "Cannot stat %s: %s\n", from, strerror(errno));
         return;
     }
 
-    char path_buf2[PATH_MAX];
-    snprintf(path_buf2, sizeof(path_buf2), "%s/%s", rootdir, name);
+    char path_buf[PATH_MAX];
+    snprintf(path_buf, sizeof(path_buf), "%s%s", rootdir, to);
 
-    mkdir(path_buf2, statbuf.st_mode & ~S_IFMT);
-    if (mount(path_buf, path_buf2, "none", MS_BIND | MS_REC, NULL) < 0) {
-      fprintf(stderr, "Cannot bind mount %s to %s: %s\n", path_buf, path_buf2, strerror(errno));
+    mkdir(path_buf, statbuf.st_mode & ~S_IFMT);
+    if (mount(from, path_buf, "none", MS_BIND | MS_REC, NULL) < 0) {
+      fprintf(stderr, "Cannot bind mount %s to %s: %s\n", from, path_buf, strerror(errno));
     }
 }
 
@@ -171,12 +168,13 @@ int main(int argc, char *argv[]) {
     }
 
     // add necessary system stuff to rootdir namespace
-    add_path("dev", rootdir);
-    add_path("proc", rootdir);
-    add_path("sys", rootdir);
-    add_path("run", rootdir);
-    add_path("etc", rootdir);
-    add_path("home", rootdir);
+    add_path("/dev" , "/dev" , rootdir);
+    add_path("/proc", "/proc", rootdir);
+    add_path("/sys" , "/sys" , rootdir);
+    add_path("/run" , "/run" , rootdir);
+    add_path("/etc" , "/etc" , rootdir);
+    add_path("/home", "/home", rootdir);
+    add_path("/"    , "/host", rootdir);
 
     // setup skeleton
     char path_buf[PATH_MAX];
